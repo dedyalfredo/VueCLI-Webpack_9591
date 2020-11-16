@@ -1,7 +1,7 @@
 <template>
     <v-main class="list">
         <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
-        <h3 class="text-h3 font-weight-medium mb-5">To Do List</h3>
+        <h3 class="text-h3 font-weight-medium mb-5">To Do List</h3>    
         <v-card>
             <v-card-title>
                 <v-text-field
@@ -12,13 +12,21 @@
                     hide-details
                 ></v-text-field>
                 <v-spacer></v-spacer>
-                <v-btn color="success" dark @click="dialog = true">
-                    Tambah
-                </v-btn>
+                    <v-btn color="success" dark @click="dialog = true">
+                        Tambah <v-icon dark right>mdi-checkbox-marked-circle</v-icon>
+                    </v-btn>
+                    <v-breadcrumbs></v-breadcrumbs>
+                    <v-btn color="#FF3030" dark @click="deleteSelect">
+                        Delete Selected <v-icon dark right>mdi-cancel</v-icon>
+                    </v-btn>
             </v-card-title>
 
-            <v-data-table :headers="headers" :items="todos" :search="search">
-            
+            <v-data-table 
+                :headers="headers"
+                :items="todos"
+                :search="search"
+                class="elevation-1">
+
                 <template v-slot:[`item.priority`]="{ item }">
                     <v-chip v-if="item.priority == 'Penting'" color="red" label outlined>{{ item.priority }}</v-chip>
                     <v-chip v-if="item.priority == 'Biasa'" color="green" label outlined>{{ item.priority }}</v-chip>
@@ -32,6 +40,11 @@
                     <v-btn small @click="deleteItem(item)">
                         delete
                     </v-btn>
+                </template>
+                <template v-slot:[`item.check`]="{ item }">
+                    <v-simple-checkbox 
+                        v-model="item.check"
+                    ></v-simple-checkbox>
                 </template>
             </v-data-table>
         </v-card>
@@ -93,6 +106,7 @@ export default {
             dialogDelete: false,
             search: null,
             dialog: false,
+            completed: false,
             editedIndex: -1,
             headers: [
                 {
@@ -104,28 +118,38 @@ export default {
                 { text: "Priority", value: "priority" },
                 { text: "Note", value: "note" },
                 { text: "Actions", value: "actions" },
+                { text: 'Delete Selected', value: 'check' },
             ],
             todos: [
                 {
                     task: "bernafas",
                     priority: "Penting",
                     note: "huffttt",
+                    check: false,
                 },
                 {
                     task: "nongkrong",
                     priority: "Tidak penting",
                     note: "bersama tman2",
+                    check: false,
                 },
                 {
                     task: "masak",
                     priority: "Biasa",
                     note: "masak air 500ml",
+                    check: false,
                 },
             ],
+            filters: {
+                notDone: function(todo){
+                    return !todo.check;
+                },
+            },
             formTodo: {
                 task: null,
                 priority: null,
                 note: null,
+                check: false,
             },
         };
     },
@@ -183,6 +207,11 @@ export default {
             this.todos.splice(this.editedIndex, 1)
             this.closeDelete()
         },
+            
+        deleteSelect: function () {
+            this.todos = this.todos.filter(this.filters.notDone);
+        },
+        
         closeDelete() {
             this.dialogDelete = false
             this.$nextTick(() => {
